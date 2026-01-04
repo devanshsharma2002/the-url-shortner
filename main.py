@@ -56,7 +56,7 @@ def store(longUrl: str, shortUrl: str) -> bool:
     for existing_short, stored_long in data.items():
         if stored_long == longUrl:
             print(f"Duplicate long URL '{longUrl}' already mapped to '{existing_short}'")
-            return False  # Don't overwrite with new short
+            return existing_short  # Don't overwrite with new short
     
     # Store new unique mapping
     if shortUrl in data:
