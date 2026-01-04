@@ -104,16 +104,24 @@ def root():
 def root():
     return "This Is An FastAPI project focussing in url shortening and redirection "
 
-# Fix /shorten: Return short URL or error
+def complete_url(url: str) -> str:
+    """Auto-add https://www. if missing protocol/domain"""
+    if url.startswith(('http://', 'https://')):
+        return url
+    if not url.startswith('www.'):
+        url = 'www.' + url
+    return 'https://' + url
+
 @app.post("/shorten")
 def shortner(longUrl: url_val):
-    long_str = str(longUrl.url)#longURL Input
-    hostname = "https://the-url-shortner.onrender.com"  # Your Render backend URL
-    short_code = shorten(long_str)#SHORTEND CODE FROM LONG URL
-    full_short = urlMaker(hostname, short_code)#CompleteURLpath
+    long_str = complete_url(str(longUrl.url))  # Auto-fix
+    hostname = "https://the-url-shortner.onrender.com"
+    short_code = shorten(long_str)
+    full_short = f"{hostname}/{short_code}"
     if store(long_str, short_code):
         return {"short_url": full_short}
-    return JSONResponse(status_code=400, content={"error": "Duplicate or collision"})
+    return JSONResponse(status_code=400, content={"error": "Duplicate/collision"})
+
 
 # Fix /longen as GET /{code} redirect (path param, not POST)
 @app.get("/{short_code}")
