@@ -12,7 +12,7 @@ from fastapi.responses import RedirectResponse, JSONResponse
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Update to your frontend URL after deploy, e.g., ["https://yourfrontend.onrender.com"]
+    allow_origins=["https://the-url-shortner-frontend.onrender.com","*"],  # Update to your frontend URL after deploy, e.g., ["https://yourfrontend.onrender.com"]
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
