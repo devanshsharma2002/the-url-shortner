@@ -108,7 +108,7 @@ def root():
 @app.post("/shorten")
 def shortner(longUrl: url_val):
     long_str = str(longUrl.url)#longURL Input
-    hostname = "https://www.rockycoc.com"  # Your Render backend URL
+    hostname = "https://the-url-shortner.onrender.com"  # Your Render backend URL
     short_code = shorten(long_str)#SHORTEND CODE FROM LONG URL
     full_short = urlMaker(hostname, short_code)#CompleteURLpath
     if store(long_str, short_code):
