@@ -4,6 +4,8 @@ from typing import Annotated
 import hashlib
 import json
 import os
+from pydantic import BaseModel, field_validator, HttpUrl
+from urllib.parse import urlparse
 app=FastAPI()
 
 #middlewareSTARTS
@@ -93,7 +95,26 @@ def findUrl(shortUrl:str):
 
 #PYDANTIC MODEL FOR URL VALIDATION
 class url_val(BaseModel):
-    url:Annotated[AnyUrl,Field(...,description="the long URL to be shorteded",examples=["https://www.google.com/",])]
+    url: str = Field(..., description="Long URL to shorten")
+    
+    @field_validator('url')
+    @classmethod
+    def complete_url(cls, v: str) -> str:
+        """Auto-complete URL before validation"""
+        if v.startswith(('http://', 'https://')):
+            return v
+        if not v.startswith('www.'):
+            v = 'www.' + v
+        completed = 'https://' + v
+        # Validate after completion
+        parsed = urlparse(completed)
+        if not parsed.netloc:
+            raise ValueError("Invalid URL - needs domain like 'google.com'")
+        return HttpUrl(completed)  # Validates + returns URL object
+    
+    def url_str(self) -> str:
+        """Helper to get string"""
+        return str(self.url)
 
 
 @app.get("/")
@@ -104,22 +125,15 @@ def root():
 def root():
     return "This Is An FastAPI project focussing in url shortening and redirection "
 
-def complete_url(url: str) -> str:
-    """Auto-add https://www. if missing protocol/domain"""
-    if url.startswith(('http://', 'https://')):
-        return url
-    if not url.startswith('www.'):
-        url = 'www.' + url
-    return 'https://' + url
 
 @app.post("/shorten")
 def shortner(longUrl: url_val):
-    long_str = complete_url(str(longUrl.url))  # Auto-fix
+    long_str = longUrl.url_str()  # Now always valid full URL
     hostname = "https://the-url-shortner.onrender.com"
     short_code = shorten(long_str)
     full_short = f"{hostname}/{short_code}"
     if store(long_str, short_code):
-        return {"short_url": full_short}
+        return {"short_url": full_short, "original": long_str}
     return JSONResponse(status_code=400, content={"error": "Duplicate/collision"})
 
 
